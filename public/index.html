@@ -14,7 +14,15 @@
         securityJsCode: 'ffda7db76e9d007b290f9e370696c6e8'
       }
     </script>
-    <script src="https://webapi.amap.com/maps?v=2.0&key=609a4913b8bd78158942bea4b1e1d154&plugin=AMap.Geocoder"></script>
+    <script type="text/javascript">
+      (function(){
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = 'https://webapi.amap.com/maps?v=2.0&key=609a4913b8bd78158942bea4b1e1d154&plugin=AMap.Geocoder&callback=initAMap';
+        document.head.appendChild(script);
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
