@@ -5,44 +5,39 @@ interface CourseLocation {
   courses: string[];
 }
 
-// 读取 Excel 文件
-async function loadExcelData(): Promise<CourseLocation[]> {
+// 从 JSON 文件加载数据
+async function loadCourseData(): Promise<CourseLocation[]> {
   try {
-    const response = await fetch('/1.xlsx');
-    const arrayBuffer = await response.arrayBuffer();
-    const workbook = read(arrayBuffer);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = utils.sheet_to_json(worksheet);
-
-    // 处理数据
-    const stationMap = new Map<string, Set<string>>();
+    // 根据环境使用不同的路径
+    const basePath = process.env.NODE_ENV === 'production' ? '/search' : '';
+    const response = await fetch(`${basePath}/courseData.json`);
     
-    jsonData.forEach((row: any) => {
-      const course = row['课程'];
-      const station = row['地铁站'];
-      
-      if (station && course) {
-        if (!stationMap.has(station)) {
-          stationMap.set(station, new Set());
-        }
-        stationMap.get(station)?.add(course);
-      }
-    });
-
-    return Array.from(stationMap.entries()).map(([station, courses]) => ({
-      station,
-      courses: Array.from(courses)
-    }));
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.courses;
   } catch (error) {
-    console.error('Failed to load Excel data:', error);
-    return [];
+    console.error('Failed to load course data:', error);
+    // 返回一些默认数据，避免完全失败
+    return [
+      {
+        station: "天香广场",
+        courses: ["美甲", "化妆"]
+      },
+      {
+        station: "五一广场",
+        courses: ["纹绣"]
+      }
+    ];
   }
 }
 
-// 导出异步加载的数据
+// 导出数据
 export let courseData: CourseLocation[] = [];
 
 // 立即加载数据
-loadExcelData().then(data => {
+loadCourseData().then(data => {
   courseData = data;
 }); 
