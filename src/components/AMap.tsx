@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useRef } from 'react';
 import { notification } from 'antd';
+import { courseData } from '../data/courses.ts';  // 添加这行导入
 
 interface AMapProps {
   selectedLocation?: any;
@@ -147,11 +148,13 @@ const AMap: FC<AMapProps> = ({ selectedLocation, onMetroStationsFound }) => {
                 // 标准化站名格式
                 let cleanName = station.name
                   .replace(/[（(](地铁站)[)）]/g, '地铁站')  // 统一地铁站的括号格式
-                  .replace(/地铁站[0-9号口]+/g, '地铁站')     // 去除数字号口
-                  .replace(/地铁站[A-Z]口/g, '地铁站')        // 去除字母口
-                  .replace(/地铁站出入口/g, '地铁站')         // 去除出入口字样
-                  .replace(/地铁站[东南西北]口/g, '地铁站')   // 去除方向口
-                  .replace(/[\s]/g, '')                      // 去除空格
+                  .replace(/地铁站.*?[0-9]+号口/g, '地铁站')  // 去除数字号口
+                  .replace(/地铁站.*?[A-Z]口/g, '地铁站')     // 去除字母口
+                  .replace(/地铁站.*?出入口/g, '地铁站')      // 去除出入口字样
+                  .replace(/地铁站.*?[东南西北]口/g, '地铁站') // 去除方向口
+                  .replace(/地铁站.*?五一里[0-9]+号口/g, '地铁站') // 去除五一里号口
+                  .replace(/地铁站.*?国金街[0-9]+号口/g, '地铁站') // 去除国金街号口
+                  .replace(/[\s]/g, '')                       // 去除空格
                   .trim();
 
                 // 提取线路信息
@@ -175,13 +178,20 @@ const AMap: FC<AMapProps> = ({ selectedLocation, onMetroStationsFound }) => {
                     [station.location.lng, station.location.lat]
                   );
 
+                  // 查找该站点的课程
+                  const courseInfo = courseData.find(c => 
+                    c.station.includes(cleanName.replace('地铁站', '')) || 
+                    cleanName.includes(c.station)
+                  );
+
                   stationMap.set(cleanName, {
                     id: station.id,
                     name: cleanName,
                     address: Array.from(lines).map(line => `${line}号线`).join(';'),
                     distance: distance,
                     location: station.location,
-                    lines: Array.from(lines)
+                    lines: Array.from(lines),
+                    courses: courseInfo?.courses || []  // 添加课程信息
                   });
                 }
               });
@@ -210,7 +220,7 @@ const AMap: FC<AMapProps> = ({ selectedLocation, onMetroStationsFound }) => {
                 title: location.name
               });
 
-              // 只为唯一的地铁站添加标记
+              // 只为唯一的地铁站��加标记
               uniqueStations.forEach((station: any) => {
                 const stationMarkerContent = `
                   <div class="metro-marker">

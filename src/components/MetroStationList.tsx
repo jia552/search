@@ -1,5 +1,7 @@
 import React, { FC, useMemo } from 'react';
 import { List, Card, Tag, Space, Typography, Tabs } from 'antd';
+import { courseData } from '../data/courses.ts';
+import CourseSummary from './CourseSummary.tsx';
 
 const { Text } = Typography;
 const { TabPane } = Tabs;
@@ -10,6 +12,7 @@ interface MetroStation {
   distance: number;
   address: string;
   lines: string[];
+  courses?: string[];
 }
 
 interface MetroStationListProps {
@@ -67,11 +70,21 @@ const StationListItem: FC<{ station: MetroStation }> = ({ station }) => (
         fontSize: '13px', 
         color: '#666',
         display: 'flex',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
-        <Text type="secondary">
-          {station.address}
-        </Text>
+        <Space direction="vertical" size={4}>
+          <Text type="secondary">
+            {station.address}
+          </Text>
+          {station.courses && station.courses.length > 0 && (
+            <Space size={4}>
+              {station.courses.map((course, index) => (
+                <Tag key={index} color="blue">{course}</Tag>
+              ))}
+            </Space>
+          )}
+        </Space>
         <Text type="secondary" strong>
           {(station.distance / 1000).toFixed(2)} km
         </Text>
@@ -101,6 +114,14 @@ const MetroStationList: FC<MetroStationListProps> = ({ stations, loading }) => {
 
     return groups;
   }, [stations]);
+
+  // 收集所有课程
+  const allCourses = new Set<string>();
+  stations.forEach(station => {
+    station.courses?.forEach(course => {
+      allCourses.add(course);
+    });
+  });
 
   return (
     <Card 
@@ -168,6 +189,7 @@ const MetroStationList: FC<MetroStationListProps> = ({ stations, loading }) => {
             </TabPane>
           ))}
       </Tabs>
+      <CourseSummary courses={allCourses} />
     </Card>
   );
 };
